@@ -11,9 +11,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { Partner } from '@/types';
 import ImageUploadField from '@/components/common/ImageUploadField';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface PartnerFormDialogProps {
@@ -33,21 +35,47 @@ export default function PartnerFormDialog({
 }: PartnerFormDialogProps) {
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<Omit<Partner, 'id' | 'created_at' | 'updated_at'>>({
     defaultValues: partner
-      ? { name: partner.name, website: partner.website, logo_url: partner.logo_url }
-      : { name: '', website: '', logo_url: '' }
+      ? { name: partner.name, description: partner.description, website_url: partner.website_url, logo_url: partner.logo_url }
+      : { name: '', description: '', website_url: '', logo_url: '' }
   });
 
   // Reset form when partner prop changes or dialog opens
   useEffect(() => {
     if (open) {
       reset(partner 
-        ? { name: partner.name, website: partner.website, logo_url: partner.logo_url }
-        : { name: '', website: '', logo_url: '' }
+        ? { name: partner.name, description: partner.description, website_url: partner.website_url, logo_url: partner.logo_url }
+        : { name: '', description: '', website_url: '', logo_url: '' }
       );
+    } else {
+      // Reset form when dialog closes
+      reset({
+        name: '',
+        description: '',
+        website_url: '',
+        logo_url: ''
+      });
     }
   }, [open, partner, reset]);
 
-  const handleFormSubmit = (data: Omit<Partner, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleFormSubmit = async (data: Omit<Partner, 'id' | 'created_at' | 'updated_at'>) => {
+    // If there's a previous logo and it's different from the new one, delete the old logo
+    if (partner?.logo_url && partner.logo_url !== data.logo_url) {
+      try {
+        const logoPath = partner.logo_url.split('/').pop();
+        if (logoPath) {
+          const { error } = await supabase.storage
+            .from('partner_logos')
+            .remove([`partners/${logoPath}`]);
+          
+          if (error) {
+            console.error('Error deleting old logo:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting old logo:', error);
+      }
+    }
+    
     onSubmit(data);
   };
 
@@ -59,12 +87,12 @@ export default function PartnerFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{partner ? 'Edit Partner' : 'Add New Partner'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)}>
-          <div className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Partner Name</Label>
               <Input
@@ -81,15 +109,15 @@ export default function PartnerFormDialog({
                 id="website"
                 type="url"
                 placeholder="https://example.com"
-                {...register('website', {
+                {...register('website_url', {
                   pattern: {
                     value: /^https?:\/\/.+/,
                     message: 'Please enter a valid URL starting with http:// or https://'
                   }
                 })}
               />
-              {errors.website && (
-                <p className="text-sm text-red-500">{errors.website.message}</p>
+              {errors.website_url && (
+                <p className="text-sm text-red-500">{errors.website_url.message}</p>
               )}
             </div>
             <ImageUploadField
@@ -102,7 +130,7 @@ export default function PartnerFormDialog({
               accept="image/png,image/jpeg,image/webp"
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-4 border-t">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>

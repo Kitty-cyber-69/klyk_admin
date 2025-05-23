@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { TeamMember } from '@/types';
 import ImageUploadField from '@/components/common/ImageUploadField';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TeamFormDialogProps {
   open: boolean;
@@ -44,10 +45,36 @@ export default function TeamFormDialog({
         ? { name: member.name, designation: member.designation, bio: member.bio, image_url: member.image_url }
         : { name: '', designation: '', bio: '', image_url: '' }
       );
+    } else {
+      // Reset form when dialog closes
+      reset({
+        name: '',
+        designation: '',
+        bio: '',
+        image_url: ''
+      });
     }
   }, [open, member, reset]);
 
-  const handleFormSubmit = (data: Omit<TeamMember, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleFormSubmit = async (data: Omit<TeamMember, 'id' | 'created_at' | 'updated_at'>) => {
+    // If there's a previous image and it's different from the new one, delete the old image
+    if (member?.image_url && member.image_url !== data.image_url) {
+      try {
+        const imagePath = member.image_url.split('/').pop();
+        if (imagePath) {
+          const { error } = await supabase.storage
+            .from('team_images')
+            .remove([`team/${imagePath}`]);
+          
+          if (error) {
+            console.error('Error deleting old image:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting old image:', error);
+      }
+    }
+    
     onSubmit(data);
   };
 
@@ -55,12 +82,12 @@ export default function TeamFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{member ? 'Edit Team Member' : 'Add Team Member'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)}>
-          <div className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Name</Label>
               <Input
@@ -102,7 +129,7 @@ export default function TeamFormDialog({
             />
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="pt-4 border-t">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>

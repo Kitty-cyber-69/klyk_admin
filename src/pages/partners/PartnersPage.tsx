@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusCircle, Link, Pencil, Trash, Loader2 } from 'lucide-react';
+import { PlusCircle, Link, Pencil, Trash, Loader2, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -129,18 +128,43 @@ export default function PartnersPage() {
           {partners && partners.length > 0 ? (
             partners.map((partner) => (
               <Card key={partner.id}>
-                <div className="h-32 flex items-center justify-center p-4 border-b">
-                  {partner.logo_url ? (
-                    <img 
-                      src={partner.logo_url} 
-                      alt={partner.name} 
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
-                      No Logo
-                    </div>
-                  )}
+                <div className="relative">
+                  <div className="flex justify-end space-x-2 p-2 absolute top-0 right-0 z-10">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="bg-white/80 hover:bg-white"
+                      onClick={() => handleOpenEditDialog(partner)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="bg-white/80 hover:bg-white text-red-500 hover:text-red-700"
+                      onClick={() => handleOpenDeleteDialog(partner)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      {deleteMutation.isPending && currentPartner?.id === partner.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="h-32 flex items-center justify-center p-4 border-b">
+                    {partner.logo_url ? (
+                      <img 
+                        src={partner.logo_url} 
+                        alt={partner.name} 
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
+                        No Logo
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <CardContent className="pt-4">
                   <h3 className="font-medium">{partner.name}</h3>
@@ -158,23 +182,6 @@ export default function PartnersPage() {
                     </div>
                   )}
                 </CardContent>
-                <CardFooter className="border-t pt-4 flex justify-between">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleOpenEditDialog(partner)}
-                  >
-                    <Pencil className="h-4 w-4 mr-1" /> Edit
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => handleOpenDeleteDialog(partner)}
-                  >
-                    <Trash className="h-4 w-4 mr-1" /> Delete
-                  </Button>
-                </CardFooter>
               </Card>
             ))
           ) : (

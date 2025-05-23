@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { Testimonial } from '@/types';
 import ImageUploadField from '@/components/common/ImageUploadField';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TestimonialFormDialogProps {
   open: boolean;
@@ -33,26 +34,13 @@ export default function TestimonialFormDialog({
 }: TestimonialFormDialogProps) {
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<Omit<Testimonial, 'id' | 'created_at' | 'updated_at'>>({
     defaultValues: testimonial
-      ? { 
-          name: testimonial.name, 
-          company: testimonial.company || '', 
-          content: testimonial.content,
-          rating: testimonial.rating || 5,
-          image_url: testimonial.image_url || ''
-        }
-      : { 
-          name: '', 
-          company: '', 
-          content: '',
-          rating: 5,
-          image_url: ''
-        }
+      ? { name: testimonial.name, content: testimonial.content, image_url: testimonial.image_url }
+      : { name: '', content: '', image_url: '' }
   });
 
-  // Reset form when testimonial prop changes or dialog opens
   useEffect(() => {
     if (open) {
-      reset(testimonial
+      reset(testimonial 
         ? { 
             name: testimonial.name, 
             company: testimonial.company || '', 
@@ -68,10 +56,37 @@ export default function TestimonialFormDialog({
             image_url: ''
           }
       );
+    } else {
+      // Reset form when dialog closes
+      reset({
+        name: '',
+        company: '',
+        content: '',
+        rating: 5,
+        image_url: ''
+      });
     }
   }, [open, testimonial, reset]);
 
-  const handleFormSubmit = (data: Omit<Testimonial, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleFormSubmit = async (data: Omit<Testimonial, 'id' | 'created_at' | 'updated_at'>) => {
+    // If there's a previous image and it's different from the new one, delete the old image
+    if (testimonial?.image_url && testimonial.image_url !== data.image_url) {
+      try {
+        const imagePath = testimonial.image_url.split('/').pop();
+        if (imagePath) {
+          const { error } = await supabase.storage
+            .from('testimonial_images')
+            .remove([`testimonials/${imagePath}`]);
+          
+          if (error) {
+            console.error('Error deleting old image:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting old image:', error);
+      }
+    }
+    
     onSubmit(data);
   };
 
@@ -79,12 +94,12 @@ export default function TestimonialFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{testimonial ? 'Edit Testimonial' : 'Add Testimonial'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)}>
-          <div className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Name</Label>
               <Input
@@ -146,7 +161,7 @@ export default function TestimonialFormDialog({
             />
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="pt-4 border-t">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>

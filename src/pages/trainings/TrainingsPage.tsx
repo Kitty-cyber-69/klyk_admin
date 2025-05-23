@@ -167,17 +167,7 @@ export default function TrainingsPage() {
           {trainings.map((training) => (
             <Card key={training.id}>
               <CardHeader className="relative">
-                {training.image_url && (
-                  <div className="relative w-full h-48 mb-4">
-                    <img
-                      src={training.image_url}
-                      alt={training.title}
-                      className="w-full h-full object-cover rounded-md"
-                    />
-                  </div>
-                )}
-                <CardTitle className="line-clamp-2">{training.title}</CardTitle>
-                <div className="flex justify-end space-x-2 absolute top-4 right-4">
+                <div className="flex justify-end space-x-2 mb-2">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -193,6 +183,16 @@ export default function TrainingsPage() {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
+                {training.image_url && (
+                  <div className="relative w-full h-48">
+                    <img
+                      src={training.image_url}
+                      alt={training.title}
+                      className="w-full h-full object-cover rounded-md"
+                    />
+                  </div>
+                )}
+                <CardTitle className="line-clamp-2 mt-4">{training.title}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">

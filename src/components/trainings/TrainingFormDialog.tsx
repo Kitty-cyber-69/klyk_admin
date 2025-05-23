@@ -16,6 +16,7 @@ import { Loader2 } from 'lucide-react';
 import { NewTraining } from '@/types';
 import ImageUploadField from '@/components/common/ImageUploadField';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TrainingFormDialogProps {
   open: boolean;
@@ -80,10 +81,40 @@ export default function TrainingFormDialog({
             registration_link: ''
           }
       );
+    } else {
+      // Reset form when dialog closes
+      reset({
+        title: '',
+        description: '',
+        start_date: '',
+        end_date: '',
+        location: '',
+        mode: 'Online',
+        image_url: '',
+        registration_link: ''
+      });
     }
   }, [open, training, reset]);
 
-  const handleFormSubmit = (data: Omit<NewTraining, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleFormSubmit = async (data: Omit<NewTraining, 'id' | 'created_at' | 'updated_at'>) => {
+    // If there's a previous image and it's different from the new one, delete the old image
+    if (training?.image_url && training.image_url !== data.image_url) {
+      try {
+        const imagePath = training.image_url.split('/').pop();
+        if (imagePath) {
+          const { error } = await supabase.storage
+            .from('training_images')
+            .remove([`trainings/${imagePath}`]);
+          
+          if (error) {
+            console.error('Error deleting old image:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting old image:', error);
+      }
+    }
+    
     onSubmit(data);
   };
 
@@ -91,12 +122,12 @@ export default function TrainingFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{training ? 'Edit Training' : 'Add New Training'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)}>
-          <div className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="title">Title</Label>
               <Input
@@ -195,7 +226,7 @@ export default function TrainingFormDialog({
             />
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="pt-4 border-t">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>

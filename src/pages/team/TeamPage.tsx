@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PlusCircle, Edit, Trash, Loader2 } from 'lucide-react';
@@ -125,18 +124,43 @@ export default function TeamPage() {
           {team && team.length > 0 ? (
             team.map((member) => (
               <Card key={member.id} className="overflow-hidden">
-                <div className="aspect-square overflow-hidden bg-slate-50">
-                  {member.image_url ? (
-                    <img 
-                      src={member.image_url} 
-                      alt={member.name} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
-                      No Image
-                    </div>
-                  )}
+                <div className="relative">
+                  <div className="flex justify-end space-x-2 p-2 absolute top-0 right-0 z-10">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="bg-white/80 hover:bg-white"
+                      onClick={() => openEditDialog(member)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="bg-white/80 hover:bg-white text-red-500 hover:text-red-700"
+                      onClick={() => openDeleteDialog(member)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      {deleteMutation.isPending && selectedMember?.id === member.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="aspect-square overflow-hidden bg-slate-50">
+                    {member.image_url ? (
+                      <img 
+                        src={member.image_url} 
+                        alt={member.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
+                        No Image
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <CardContent className="pt-4">
                   <h3 className="font-medium text-lg">{member.name}</h3>
@@ -145,29 +169,6 @@ export default function TeamPage() {
                     <p className="mt-2 text-sm line-clamp-2">{member.bio}</p>
                   )}
                 </CardContent>
-                <CardFooter className="border-t pt-4 flex justify-between">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => openEditDialog(member)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" /> Edit
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => openDeleteDialog(member)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    {deleteMutation.isPending && selectedMember?.id === member.id ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    ) : (
-                      <Trash className="h-4 w-4 mr-1" />
-                    )}
-                    Delete
-                  </Button>
-                </CardFooter>
               </Card>
             ))
           ) : (
