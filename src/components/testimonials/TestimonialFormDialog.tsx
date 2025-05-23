@@ -40,7 +40,7 @@ export default function TestimonialFormDialog({
 
   useEffect(() => {
     if (open) {
-      reset(testimonial 
+      reset(testimonial
         ? { 
             name: testimonial.name, 
             company: testimonial.company || '', 

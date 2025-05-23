@@ -152,18 +152,18 @@ export default function PartnersPage() {
                       )}
                     </Button>
                   </div>
-                  <div className="h-32 flex items-center justify-center p-4 border-b">
-                    {partner.logo_url ? (
-                      <img 
-                        src={partner.logo_url} 
-                        alt={partner.name} 
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
-                        No Logo
-                      </div>
-                    )}
+                <div className="h-32 flex items-center justify-center p-4 border-b">
+                  {partner.logo_url ? (
+                    <img 
+                      src={partner.logo_url} 
+                      alt={partner.name} 
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
+                      No Logo
+                    </div>
+                  )}
                   </div>
                 </div>
                 <CardContent className="pt-4">

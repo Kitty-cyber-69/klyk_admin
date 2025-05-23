@@ -35,6 +35,13 @@ export default function ImageUploadField({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.');
+      return;
+    }
+
     // Validate file size (5MB limit)
     const fileSizeMB = file.size / (1024 * 1024);
     if (fileSizeMB > 5) {
@@ -55,7 +62,19 @@ export default function ImageUploadField({
     } catch (error) {
       console.error('Upload failed:', error);
       setPreviewUrl(value || null); // Revert to previous image if upload fails
-      toast.error('Failed to upload image');
+      
+      // More specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('Invalid file type')) {
+          toast.error('Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.');
+        } else if (error.message.includes('File size too large')) {
+          toast.error('File size exceeds the 5MB limit');
+        } else {
+          toast.error(`Upload failed: ${error.message}`);
+        }
+      } else {
+        toast.error('Failed to upload image. Please try again.');
+      }
     } finally {
       setIsUploading(false);
     }
@@ -120,7 +139,7 @@ export default function ImageUploadField({
             )}
           </Label>
           <p className="text-xs text-muted-foreground mt-1">
-            Maximum file size: 5MB
+            Supported formats: JPEG, PNG, GIF, WebP. Maximum file size: 5MB
           </p>
         </div>
       </div>

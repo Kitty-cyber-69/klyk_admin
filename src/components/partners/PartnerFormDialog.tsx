@@ -35,48 +35,54 @@ export default function PartnerFormDialog({
 }: PartnerFormDialogProps) {
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<Omit<Partner, 'id' | 'created_at' | 'updated_at'>>({
     defaultValues: partner
-      ? { name: partner.name, description: partner.description, website_url: partner.website_url, logo_url: partner.logo_url }
-      : { name: '', description: '', website_url: '', logo_url: '' }
+      ? { name: partner.name, website: partner.website, logo_url: partner.logo_url }
+      : { name: '', website: '', logo_url: '' }
   });
 
   // Reset form when partner prop changes or dialog opens
   useEffect(() => {
     if (open) {
       reset(partner 
-        ? { name: partner.name, description: partner.description, website_url: partner.website_url, logo_url: partner.logo_url }
-        : { name: '', description: '', website_url: '', logo_url: '' }
+        ? { name: partner.name, website: partner.website, logo_url: partner.logo_url }
+        : { name: '', website: '', logo_url: '' }
       );
     } else {
       // Reset form when dialog closes
       reset({
         name: '',
-        description: '',
-        website_url: '',
+        website: '',
         logo_url: ''
       });
     }
   }, [open, partner, reset]);
 
   const handleFormSubmit = async (data: Omit<Partner, 'id' | 'created_at' | 'updated_at'>) => {
-    // If there's a previous logo and it's different from the new one, delete the old logo
-    if (partner?.logo_url && partner.logo_url !== data.logo_url) {
-      try {
-        const logoPath = partner.logo_url.split('/').pop();
-        if (logoPath) {
-          const { error } = await supabase.storage
-            .from('partner_logos')
-            .remove([`partners/${logoPath}`]);
-          
-          if (error) {
-            console.error('Error deleting old logo:', error);
+    try {
+      // If there's a previous logo and it's different from the new one, delete the old logo
+      if (partner?.logo_url && partner.logo_url !== data.logo_url) {
+        try {
+          const logoPath = partner.logo_url.split('/').pop();
+          if (logoPath) {
+            const { error } = await supabase.storage
+              .from('partner_logos')
+              .remove([`partners/${logoPath}`]);
+            
+            if (error) {
+              console.error('Error deleting old logo:', error);
+              toast.error('Failed to delete old logo');
+            }
           }
+        } catch (error) {
+          console.error('Error deleting old logo:', error);
+          toast.error('Failed to delete old logo');
         }
-      } catch (error) {
-        console.error('Error deleting old logo:', error);
       }
+      
+      onSubmit(data);
+    } catch (error) {
+      console.error('Error submitting partner form:', error);
+      toast.error('Failed to save partner');
     }
-    
-    onSubmit(data);
   };
 
   const logoUrl = watch('logo_url');
@@ -109,15 +115,15 @@ export default function PartnerFormDialog({
                 id="website"
                 type="url"
                 placeholder="https://example.com"
-                {...register('website_url', {
+                {...register('website', {
                   pattern: {
                     value: /^https?:\/\/.+/,
                     message: 'Please enter a valid URL starting with http:// or https://'
                   }
                 })}
               />
-              {errors.website_url && (
-                <p className="text-sm text-red-500">{errors.website_url.message}</p>
+              {errors.website && (
+                <p className="text-sm text-red-500">{errors.website.message}</p>
               )}
             </div>
             <ImageUploadField

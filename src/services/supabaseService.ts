@@ -32,6 +32,24 @@ export const createBlogPost = async (blogPost: Omit<BlogPost, 'id' | 'created_at
 };
 
 export const updateBlogPost = async (id: string, blogPost: Partial<BlogPost>): Promise<BlogPost> => {
+  // First get the existing blog post to check for image changes
+  const { data: existingPost, error: fetchError } = await supabase
+    .from('blog_posts')
+    .select('image_url')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching blog post:', fetchError);
+    throw fetchError;
+  }
+
+  // If there's a previous image and it's different from the new one, delete the old image
+  if (existingPost?.image_url && existingPost.image_url !== blogPost.image_url) {
+    await deleteImageFromStorage(existingPost.image_url, 'blog_images', 'blog');
+  }
+
+  // Update the blog post
   const { data, error } = await supabase
     .from('blog_posts')
     .update({ ...blogPost, updated_at: new Date().toISOString() })
@@ -48,6 +66,22 @@ export const updateBlogPost = async (id: string, blogPost: Partial<BlogPost>): P
 };
 
 export const deleteBlogPost = async (id: string): Promise<void> => {
+  // First get the blog post to get its image URL
+  const { data: blogPost, error: fetchError } = await supabase
+    .from('blog_posts')
+    .select('image_url')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching blog post:', fetchError);
+    throw fetchError;
+  }
+
+  // Delete the image from storage
+  await deleteImageFromStorage(blogPost?.image_url, 'blog_images', 'blog');
+
+  // Delete the blog post
   const { error } = await supabase
     .from('blog_posts')
     .delete()
@@ -106,6 +140,22 @@ export const updateTeamMember = async (id: string, member: Partial<TeamMember>):
 };
 
 export const deleteTeamMember = async (id: string): Promise<void> => {
+  // First get the team member to get their image URL
+  const { data: teamMember, error: fetchError } = await supabase
+    .from('team_members')
+    .select('image_url')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching team member:', fetchError);
+    throw fetchError;
+  }
+
+  // Delete the image from storage
+  await deleteImageFromStorage(teamMember?.image_url, 'team_images', 'team');
+
+  // Delete the team member
   const { error } = await supabase
     .from('team_members')
     .delete()
@@ -164,6 +214,22 @@ export const updateTestimonial = async (id: string, testimonial: Partial<Testimo
 };
 
 export const deleteTestimonial = async (id: string): Promise<void> => {
+  // First get the testimonial to get its image URL
+  const { data: testimonial, error: fetchError } = await supabase
+    .from('testimonials')
+    .select('image_url')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching testimonial:', fetchError);
+    throw fetchError;
+  }
+
+  // Delete the image from storage
+  await deleteImageFromStorage(testimonial?.image_url, 'testimonial_images', 'testimonials');
+
+  // Delete the testimonial
   const { error } = await supabase
     .from('testimonials')
     .delete()
@@ -206,6 +272,24 @@ export const createPartner = async (partner: Omit<Partner, 'id' | 'created_at' |
 };
 
 export const updatePartner = async (id: string, partner: Partial<Partner>): Promise<Partner> => {
+  // First get the existing partner to check for logo changes
+  const { data: existingPartner, error: fetchError } = await supabase
+    .from('partners')
+    .select('logo_url')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching partner:', fetchError);
+    throw fetchError;
+  }
+
+  // If there's a previous logo and it's different from the new one, delete the old logo
+  if (existingPartner?.logo_url && existingPartner.logo_url !== partner.logo_url) {
+    await deleteImageFromStorage(existingPartner.logo_url, 'partner_logos', 'partners');
+  }
+
+  // Update the partner
   const { data, error } = await supabase
     .from('partners')
     .update({ ...partner, updated_at: new Date().toISOString() })
@@ -222,6 +306,22 @@ export const updatePartner = async (id: string, partner: Partial<Partner>): Prom
 };
 
 export const deletePartner = async (id: string): Promise<void> => {
+  // First get the partner to get their logo URL
+  const { data: partner, error: fetchError } = await supabase
+    .from('partners')
+    .select('logo_url')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching partner:', fetchError);
+    throw fetchError;
+  }
+
+  // Delete the logo from storage
+  await deleteImageFromStorage(partner?.logo_url, 'partner_logos', 'partners');
+
+  // Delete the partner
   const { error } = await supabase
     .from('partners')
     .delete()
@@ -304,6 +404,24 @@ export const createTraining = async (training: Omit<NewTraining, 'id' | 'created
 };
 
 export const updateTraining = async (id: string, training: Partial<NewTraining>): Promise<NewTraining> => {
+  // First get the existing training to check for image changes
+  const { data: existingTraining, error: fetchError } = await supabase
+    .from('new_trainings')
+    .select('image_url')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching training:', fetchError);
+    throw fetchError;
+  }
+
+  // If there's a previous image and it's different from the new one, delete the old image
+  if (existingTraining?.image_url && existingTraining.image_url !== training.image_url) {
+    await deleteImageFromStorage(existingTraining.image_url, 'training_images', 'trainings');
+  }
+
+  // Update the training
   const { data, error } = await supabase
     .from('new_trainings')
     .update({ ...training, updated_at: new Date().toISOString() })
@@ -320,6 +438,22 @@ export const updateTraining = async (id: string, training: Partial<NewTraining>)
 };
 
 export const deleteTraining = async (id: string): Promise<void> => {
+  // First get the training to get its image URL
+  const { data: training, error: fetchError } = await supabase
+    .from('new_trainings')
+    .select('image_url')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching training:', fetchError);
+    throw fetchError;
+  }
+
+  // Delete the image from storage
+  await deleteImageFromStorage(training?.image_url, 'training_images', 'trainings');
+
+  // Delete the training
   const { error } = await supabase
     .from('new_trainings')
     .delete()
@@ -386,6 +520,34 @@ export const deleteImage = async (bucket: StorageBucket, path: string): Promise<
 
   if (error) {
     console.error('Error deleting image:', error);
+    throw error;
+  }
+};
+
+// Helper function to delete image from Supabase storage
+const deleteImageFromStorage = async (imageUrl: string | null, bucketName: string, folderPath: string) => {
+  if (!imageUrl) return;
+  
+  try {
+    // Extract the path from the URL
+    const url = new URL(imageUrl);
+    const pathParts = url.pathname.split('/');
+    const fileName = pathParts[pathParts.length - 1];
+    
+    if (fileName) {
+      // Remove any query parameters from the filename
+      const cleanFileName = fileName.split('?')[0];
+      const { error } = await supabase.storage
+        .from(bucketName)
+        .remove([`${folderPath}/${cleanFileName}`]);
+      
+      if (error) {
+        console.error(`Error deleting image from ${bucketName}:`, error);
+        throw error;
+      }
+    }
+  } catch (error) {
+    console.error(`Error deleting image from ${bucketName}:`, error);
     throw error;
   }
 };

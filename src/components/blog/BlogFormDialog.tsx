@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { BlogPost } from '@/types';
 import ImageUploadField from '@/components/common/ImageUploadField';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface BlogFormDialogProps {
   open: boolean;
@@ -55,25 +55,12 @@ export default function BlogFormDialog({
   }, [open, post, reset]);
 
   const handleFormSubmit = async (data: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => {
-    // If there's a previous image and it's different from the new one, delete the old image
-    if (post?.image_url && post.image_url !== data.image_url) {
-      try {
-        const imagePath = post.image_url.split('/').pop();
-        if (imagePath) {
-          const { error } = await supabase.storage
-            .from('blog_images')
-            .remove([`blog/${imagePath}`]);
-          
-          if (error) {
-            console.error('Error deleting old image:', error);
-          }
-        }
-      } catch (error) {
-        console.error('Error deleting old image:', error);
-      }
+    try {
+      onSubmit(data);
+    } catch (error) {
+      console.error('Error submitting blog post:', error);
+      toast.error('Failed to save blog post');
     }
-    
-    onSubmit(data);
   };
 
   const imageUrl = watch('image_url');
@@ -86,25 +73,54 @@ export default function BlogFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="grid gap-4">
-            <div className="col-span-4">
+            <div className="grid gap-2">
               <Label htmlFor="title">Title</Label>
-              <Input id="title" {...register('title')} />
+              <Input 
+                id="title" 
+                {...register('title', { required: 'Title is required' })}
+              />
+              {errors.title && (
+                <p className="text-sm text-red-500">{errors.title.message}</p>
+              )}
             </div>
-            <div className="col-span-4">
+            
+            <div className="grid gap-2">
               <Label htmlFor="content">Content</Label>
-              <Textarea id="content" {...register('content')} />
+              <Textarea 
+                id="content" 
+                rows={4}
+                {...register('content', { required: 'Content is required' })}
+              />
+              {errors.content && (
+                <p className="text-sm text-red-500">{errors.content.message}</p>
+              )}
             </div>
-            <div className="col-span-4">
-              <Label htmlFor="image_url">Image URL</Label>
-              <Input id="image_url" {...register('image_url')} />
-            </div>
+
+            <ImageUploadField
+              id="blog-image"
+              label="Blog Image"
+              value={imageUrl}
+              onChange={(url) => setValue('image_url', url)}
+              folderPath="blog"
+              bucketName="blog_images"
+              accept="image/png,image/jpeg,image/webp"
+            />
           </div>
-          <DialogFooter>
+          
+          <DialogFooter className="pt-4 border-t">
             <DialogClose asChild>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Submit'}
-              </Button>
+              <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Blog Post'
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

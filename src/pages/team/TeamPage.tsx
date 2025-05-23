@@ -148,18 +148,18 @@ export default function TeamPage() {
                       )}
                     </Button>
                   </div>
-                  <div className="aspect-square overflow-hidden bg-slate-50">
-                    {member.image_url ? (
-                      <img 
-                        src={member.image_url} 
-                        alt={member.name} 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
-                        No Image
-                      </div>
-                    )}
+                <div className="aspect-square overflow-hidden bg-slate-50">
+                  {member.image_url ? (
+                    <img 
+                      src={member.image_url} 
+                      alt={member.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
+                      No Image
+                    </div>
+                  )}
                   </div>
                 </div>
                 <CardContent className="pt-4">
