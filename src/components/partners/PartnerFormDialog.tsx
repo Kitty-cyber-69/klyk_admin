@@ -78,7 +78,7 @@ export default function PartnerFormDialog({
         }
       }
       
-      onSubmit(data);
+    onSubmit(data);
     } catch (error) {
       console.error('Error submitting partner form:', error);
       toast.error('Failed to save partner');

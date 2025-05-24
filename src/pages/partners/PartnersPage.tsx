@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusCircle, Link, Pencil, Trash, Loader2, Edit } from 'lucide-react';
+import { PlusCircle, Link, Pencil, Trash, Loader2, Edit, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Partner } from '@/types';
 import { getPartners, createPartner, updatePartner, deletePartner } from '@/services/supabaseService';
 import PartnerFormDialog from '@/components/partners/PartnerFormDialog';
@@ -18,20 +19,36 @@ export default function PartnersPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentPartner, setCurrentPartner] = useState<Partner | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [websiteFilter, setWebsiteFilter] = useState<'all' | 'with' | 'without'>('all');
   
   // Fetch partners data from Supabase
-  const { data: partners, isLoading, error } = useQuery({
+  const { data: partners = [], isLoading, error } = useQuery({
     queryKey: ['partners'],
     queryFn: getPartners
   });
   
+  // Filter partners based on search query and website filter
+  const filteredPartners = partners.filter(partner => {
+    const matchesSearch = 
+      partner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (partner.website && partner.website.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesWebsite = 
+      websiteFilter === 'all' ||
+      (websiteFilter === 'with' && partner.website) ||
+      (websiteFilter === 'without' && !partner.website);
+    
+    return matchesSearch && matchesWebsite;
+  });
+  
   // Create partner mutation
   const createMutation = useMutation({
-    mutationFn: (partner: Omit<Partner, 'id' | 'created_at' | 'updated_at'>) => createPartner(partner),
+    mutationFn: (data: Omit<Partner, 'id' | 'created_at' | 'updated_at'>) => createPartner(data),
     onSuccess: () => {
       toast.success('Partner added successfully');
-      queryClient.invalidateQueries({ queryKey: ['partners'] });
       setIsAddDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['partners'] });
     },
     onError: (error) => {
       toast.error(`Error adding partner: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -40,13 +57,12 @@ export default function PartnersPage() {
   
   // Update partner mutation
   const updateMutation = useMutation({
-    mutationFn: ({ id, partner }: { id: string; partner: Partial<Partner> }) => 
-      updatePartner(id, partner),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Partner> }) => updatePartner(id, data),
     onSuccess: () => {
       toast.success('Partner updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['partners'] });
       setIsEditDialogOpen(false);
       setCurrentPartner(null);
+      queryClient.invalidateQueries({ queryKey: ['partners'] });
     },
     onError: (error) => {
       toast.error(`Error updating partner: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -55,12 +71,12 @@ export default function PartnersPage() {
   
   // Delete partner mutation
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deletePartner(id),
+    mutationFn: deletePartner,
     onSuccess: () => {
       toast.success('Partner deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['partners'] });
       setIsDeleteDialogOpen(false);
       setCurrentPartner(null);
+      queryClient.invalidateQueries({ queryKey: ['partners'] });
     },
     onError: (error) => {
       toast.error(`Error deleting partner: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -82,14 +98,21 @@ export default function PartnersPage() {
     createMutation.mutate(data);
   };
 
-  const handleUpdatePartner = (data: Omit<Partner, 'id' | 'created_at' | 'updated_at'>) => {
-    if (!currentPartner) return;
-    updateMutation.mutate({ id: currentPartner.id, partner: data });
+  const handleUpdatePartner = (data: Partial<Partner>) => {
+    if (currentPartner) {
+      updateMutation.mutate({ id: currentPartner.id, data });
+    }
   };
 
   const handleDeletePartner = () => {
-    if (!currentPartner) return;
-    deleteMutation.mutate(currentPartner.id);
+    if (currentPartner) {
+      deleteMutation.mutate(currentPartner.id);
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setWebsiteFilter('all');
   };
 
   if (error) {
@@ -119,14 +142,43 @@ export default function PartnersPage() {
         }
       />
 
+      {/* Search and Filter Section */}
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search partners..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={websiteFilter}
+              onChange={(e) => setWebsiteFilter(e.target.value as 'all' | 'with' | 'without')}
+              className="px-3 py-2 border rounded-md"
+            >
+              <option value="all">All Partners</option>
+              <option value="with">With Website</option>
+              <option value="without">Without Website</option>
+            </select>
+            <Button variant="outline" onClick={clearFilters}>
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 text-admin-primary animate-spin" />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {partners && partners.length > 0 ? (
-            partners.map((partner) => (
+          {filteredPartners.length > 0 ? (
+            filteredPartners.map((partner) => (
               <Card key={partner.id}>
                 <div className="relative">
                   <div className="flex justify-end space-x-2 p-2 absolute top-0 right-0 z-10">
@@ -186,7 +238,11 @@ export default function PartnersPage() {
             ))
           ) : (
             <div className="col-span-full p-8 text-center border rounded-md bg-slate-50">
-              <p className="text-slate-500">No partners found. Add your first partner to get started.</p>
+              <p className="text-slate-500">
+                {searchQuery || websiteFilter !== 'all'
+                  ? 'No partners found matching your filters.'
+                  : 'No partners found. Add your first partner to get started.'}
+              </p>
             </div>
           )}
         </div>

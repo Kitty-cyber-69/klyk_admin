@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { BlogPost, TeamMember, Testimonial, Partner, Statistics, NewTraining } from '@/types';
+import { BlogPost, TeamMember, Testimonial, Partner, Statistics, NewTraining, Contact } from '@/types';
 
 // Blog post services
 export const getBlogPosts = async (): Promise<BlogPost[]> => {
@@ -548,6 +548,33 @@ const deleteImageFromStorage = async (imageUrl: string | null, bucketName: strin
     }
   } catch (error) {
     console.error(`Error deleting image from ${bucketName}:`, error);
+    throw error;
+  }
+};
+
+// Contact services
+export const getContacts = async (): Promise<Contact[]> => {
+  const { data, error } = await supabase
+    .from('contact_us')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching contacts:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const deleteContact = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('contact_us')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting contact:', error);
     throw error;
   }
 };

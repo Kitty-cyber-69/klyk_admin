@@ -15,6 +15,7 @@ import TeamPage from "./pages/team/TeamPage";
 import TestimonialsPage from "./pages/testimonials/TestimonialsPage";
 import PartnersPage from "./pages/partners/PartnersPage";
 import TrainingsPage from "./pages/trainings/TrainingsPage";
+import ContactsPage from "./pages/Contacts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="testimonials" element={<TestimonialsPage />} />
             <Route path="partners" element={<PartnersPage />} />
             <Route path="trainings" element={<TrainingsPage />} />
+            <Route path="contacts" element={<ContactsPage />} />
           </Route>
           
           {/* Catch all */}

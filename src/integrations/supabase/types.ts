@@ -201,6 +201,42 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_us: {
+        Row: {
+          id: string;
+          name: string;
+          email: string;
+          phone_number: string;
+          address: string;
+          message: string;
+          req_type: string;
+          created_at: string;
+          updated_at: string;
+        }
+        Insert: {
+          id?: string;
+          name: string;
+          email: string;
+          phone_number: string;
+          address: string;
+          message: string;
+          req_type: string;
+          created_at?: string;
+          updated_at?: string;
+        }
+        Update: {
+          id?: string;
+          name?: string;
+          email?: string;
+          phone_number?: string;
+          address?: string;
+          message?: string;
+          req_type?: string;
+          created_at?: string;
+          updated_at?: string;
+        }
+        Relationships: [];
+      }
     }
     Views: {
       [_ in never]: never

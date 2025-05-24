@@ -78,3 +78,15 @@ export interface NewTraining {
   created_at: string;
   updated_at: string;
 }
+
+export interface Contact {
+  id: string;
+  name: string;
+  email: string;
+  phone_number: string;
+  address: string;
+  message: string;
+  req_type: string;
+  created_at: string;
+  updated_at: string;
+}

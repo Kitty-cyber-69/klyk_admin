@@ -59,7 +59,7 @@ export default function TrainingFormDialog({
 
   useEffect(() => {
     if (open) {
-      reset(training 
+      reset(training
         ? { 
             title: training.title,
             description: training.description || '',
@@ -98,7 +98,7 @@ export default function TrainingFormDialog({
 
   const handleFormSubmit = async (data: Omit<NewTraining, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      onSubmit(data);
+    onSubmit(data);
     } catch (error) {
       console.error('Error submitting training:', error);
       toast.error('Failed to save training');
@@ -117,19 +117,19 @@ export default function TrainingFormDialog({
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="title">Title</Label>
-              <Input 
-                id="title" 
+              <Input
+                id="title"
                 {...register('title', { required: 'Title is required' })}
               />
               {errors.title && (
                 <p className="text-sm text-red-500">{errors.title.message}</p>
               )}
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea 
-                id="description" 
+              <Textarea
+                id="description"
                 rows={3}
                 {...register('description')}
               />
@@ -212,7 +212,7 @@ export default function TrainingFormDialog({
               accept="image/png,image/jpeg,image/webp"
             />
           </div>
-          
+
           <DialogFooter className="pt-4 border-t">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>

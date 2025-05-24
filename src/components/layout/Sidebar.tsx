@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, LayoutDashboard, Users, Star, Building, BookOpen, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutDashboard, Users, Star, Building, BookOpen, Calendar, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ const navItems = [
   { name: 'Testimonials', path: '/testimonials', icon: Star },
   { name: 'Partners', path: '/partners', icon: Building },
   { name: 'Training Updates', path: '/trainings', icon: Calendar },
+  { name: 'User Contacts', path: '/contacts', icon: MessageSquare },
 ];
 
 export default function Sidebar() {
